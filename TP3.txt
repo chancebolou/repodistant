@@ -1,0 +1,131 @@
+
+/*******************************************************************/
+/*                                                                 */
+/* Script TP3                                                      */
+/*                                                                 */
+/* réalisé par Hamza nadif ;fatima essahibi                    */
+/*                                                                 */
+/*******************************************************************/
+1)
+___
+alter type ty_bornes 
+Add Member function getLatitudeNumber return number
+cascade
+/
+
+
+alter type ty_bornes 
+Add Member function getLatitudeVarchar return varchar
+cascade
+/
+
+create or replace type body ty_bornes is
+member function getLatitudeNumber return number is
+begin
+      return self.coordonnees.lat*Acos(-1)/180;
+end;
+member function getLatitudeVarchar return varchar is
+d number;
+m number;
+s number; 
+begin
+d:= floor(self.coordonnees.lat);
+m:=floor(mod(self.coordonnees.lat,floor(self.coordonnees.lat))*60);
+s:=floor(mod(mod(self.coordonnees.lat,floor(self.coordonnees.lat))*60,
+floor(mod(self.coordonnees.lat,floor(self.coordonnees.lat))*60))*60);
+return 'dg'||d||'mn'||m||'s'||s;
+end;
+end;
+/
+show errors;
+
+
+
+> create or replace type body ty_bornes is
+  member function getLatitudeNumber return number is
+  begin
+      return self.coordonnees.lat*Acos(-1)/180;
+  end;
+  end;
+  /
+
+  utilisation de la methode : select b.getLatitudeNumber() from bornes b;
+
+  //fonctions des longitude
+
+alter type ty_bornes 
+Add Member function getLongitudeNumber return number
+cascade
+/
+alter type ty_bornes 
+Add Member function getLongitudeVarchar return varchar 
+cascade
+/
+alter type ty_bornes 
+Add Member function getDistance(b2 ty_bornes) return number
+cascade
+/
+alter type ty_bornes 
+Add Member function getDistance2(b2 REF ty_bornes) return number
+cascade
+/
+create or replace type body ty_bornes is
+member function getLatitudeNumber return number is
+begin
+      return self.coordonnees.lat*Acos(-1)/180;
+end;
+member function getLatitudeVarchar return varchar is
+d number;
+m number;
+s number; 
+begin
+d:= floor(self.coordonnees.lat);
+m:=floor(mod(self.coordonnees.lat,floor(self.coordonnees.lat))*60);
+s:=floor(mod(mod(self.coordonnees.lat,floor(self.coordonnees.lat))*60,
+floor(mod(self.coordonnees.lat,floor(self.coordonnees.lat))*60))*60);
+return 'dg'||d||'mn'||m||'s'||s;
+end;
+member function getLongitudeNumber return number is
+  begin
+      return self.coordonnees.lon*Acos(-1)/180;
+  end;
+member function getLongitudeVarchar return varchar is
+d number;
+m number;
+s number; 
+begin
+d:= floor(self.coordonnees.lon);
+m:=floor(mod(self.coordonnees.lon,floor(self.coordonnees.lon))*60);
+s:=floor(mod(mod(self.coordonnees.lon,floor(self.coordonnees.lon))*60,
+floor(mod(self.coordonnees.lon,floor(self.coordonnees.lon))*60))*60);
+return 'dg'||d||'mn'||m||'s'||s;
+end;
+member function getDistance(b2 ty_bornes) return number is
+R number;
+begin
+R:=6371;
+return( R*acos(sin(self.getLatitudeNumber())*sin(b2.getLatitudeNumber())+cos(self.getLatitudeNumber())*cos(b2.getLatitudeNumber())*cos(self.getLongitudeNumber()-b2.getLongitudeNumber())));
+end;
+member function getDistance2(b2 REF ty_bornes) return number is
+R number;
+obj2 ty_bornes;
+begin
+ UTL_REF.SELECT_OBJECT(b2,obj2);
+return self.getDistance(obj2);
+end;
+end;
+  /
+select b.getDistance2(value(B10)) from bornes b;
+
+
+1-
+ a - select b.idb,b.coordonnees.lat,b.coordonnees.lon from  bornes b;
+ b-  select b.idb,b.getLatitudeVarchar() as seLat,b.getLongitudeVarchar() as selon from  bornes b;
+ c-  select b.idb,b.getLatitudeNumber(),b.getLongitudeNumber()  from  bornes b;
+2-
+ a- select b.idb,b.coordonnees.lat,b.coordonnees.lon from  bornes b ,table(b.delimiter) d  where d.idp='PA1';
+/*le deuxieme cas en passant par l atable parcelle */$
+  
+ select b.ref_idb.idb,b.ref_idb.coordonnees.lat,b.ref_idb.coordonnees.lon from parcelles p ,table(p.limiter) b  where p.idp='PA1';
+b- 
+

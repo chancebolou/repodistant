@@ -1,0 +1,80 @@
+ETUDIANTS:
+Khadidiatou tida DANSOKHO
+Serieux Colomb MBOUNGOU
+_______________________________
+
+DROP TABLE bornes;
+DROP TABLE parcelles;
+DROP TYPE  ty_parcelles FORCE;
+
+CREATE TYPE ty_coordonnees AS OBJECT
+(lat NUMBER,
+ lon NUMBER)
+/
+ CREATE TYPE ty_bornes AS OBJECT 
+ (idb VARCHAR(25),
+  coordonnees ty_coordonnees)
+/
+
+CREATE TYPE ty_ref_bornes AS OBJECT 
+(idb VARCHAR(25),
+ref_b ref ty_bornes,
+pos NUMBER)
+/
+
+CREATE TYPE ty_parcelles
+/
+
+CREATE TYPE ty_ref_parcelles AS OBJECT 
+(idp VARCHAR(25),
+ ref_p REF ty_parcelles 
+ )
+ /
+ 
+CREATE TYPE ty_nt_bornes AS TABLE OF ty_ref_bornes
+/
+CREATE TYPE ty_nt_parcelles AS TABLE OF ty_ref_parcelles
+/
+CREATE TYPE ty_parcelles AS OBJECT 
+(idp VARCHAR(25),
+limiter ty_nt_bornes,
+typ VARCHAR(100),
+composer ty_nt_parcelles)
+/
+CREATE TABLE bornes OF ty_bornes
+(CONSTRAINT PK_BORNES PRIMARY KEY(idb));
+
+CREATE TABLE parcelles OF ty_parcelles 
+(CONSTRAINT PK_PARCELLES PRIMARY KEY(idp))
+NESTED TABLE limiter STORE AS sp_limiter
+NESTED TABLE composer STORE AS sp_composer;
+
+Insert INTO bornes VALUES
+(ty_bornes('B1',ty_coordonnees(43.597798,01.953889)));
+
+Insert INTO bornes VALUES
+(ty_bornes('B2',ty_coordonnees(43.599911,01.955370)));
+
+Insert INTO bornes VALUES
+(ty_bornes('B3',ty_coordonnees(43.600175,01.955692)));
+
+Insert INTO bornes VALUES
+(ty_bornes('B4',ty_coordonnees(43.600066,01.955992)));
+
+Insert INTO bornes VALUES
+(ty_bornes('B5',ty_coordonnees(43.599694,01.955713)));
+
+Insert INTO bornes VALUES
+(ty_bornes('B6',ty_coordonnees(43.599072,01.957151)));
+
+Insert INTO bornes VALUES
+(ty_bornes('B7',ty_coordonnees(43.599025,01.958267)));
+
+Insert INTO bornes VALUES
+(ty_bornes('B8',ty_coordonnees(43.597953,01.957516)));
+
+Insert INTO bornes VALUES
+(ty_bornes('B9',ty_coordonnees(43.597875,01.958052)));
+
+Insert INTO bornes VALUES
+(ty_bornes('B10',ty_coordonnees(43.597285,01.958546)));

@@ -1,0 +1,582 @@
+
+*****************************************************************
+*			PACKAGE IHM				*
+*****************************************************************
+
+**************************Gestion_countries***********************
+
+package ma.suptech.preparationexamen.ihm;
+
+import android.content.Intent;
+import android.database.SQLException;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import ma.suptech.preparationexamen.R;
+import ma.suptech.preparationexamen.dao.Countries;
+import ma.suptech.preparationexamen.metier.CountriesMetier;
+
+public class Gestion_countries extends AppCompatActivity {
+
+    EditText code,name,continent,region;
+    CountriesMetier metier;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_gestion_countries);
+        init();
+        metier = new CountriesMetier(this);
+    }
+
+    private void init()
+    {
+        code = (EditText) findViewById(R.id.code_txt);
+        name = (EditText) findViewById(R.id.name_txt);
+        continent = (EditText) findViewById(R.id.continent_txt);
+        region = (EditText) findViewById(R.id.region_txt);
+    }
+
+    public void add_countries(View view)
+    {
+        try
+        {
+            metier.add_countries(new Countries(code.getText().toString(),
+                    name.getText().toString(), continent.getText().toString(),
+                    region.getText().toString()));
+        }catch (SQLException ex)
+        {
+            Toast.makeText(this,ex.getMessage(),Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void go_to_list(View view)
+    {
+        Intent intent = new Intent(this,List_Countries.class);
+        startActivity(intent);
+    }
+}
+**********************************************************************************************
+
+************************************list_countries**************************************************
+
+package ma.suptech.preparationexamen.ihm;
+
+import android.content.Intent;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.ListView;
+import android.widget.TextView;
+
+import java.util.List;
+
+import ma.suptech.preparationexamen.R;
+import ma.suptech.preparationexamen.dao.Countries;
+import ma.suptech.preparationexamen.metier.CountriesMetier;
+
+public class List_Countries extends AppCompatActivity {
+
+    CountriesMetier metier ;
+    TextView chercher;
+    ListView list_countries ;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_list__countries);
+
+        chercher = (TextView) findViewById(R.id.chercher_txt);
+        list_countries = (ListView) findViewById(R.id.list_countries);
+
+        metier = new CountriesMetier(this);
+        List<Countries> countries = metier.find_countries_by_name(chercher.getText().toString());
+        String[] code = new String[countries.size()];
+        int i = 0 ;
+        for(Countries c : countries)
+        {
+            code[i] = c.getCode();
+            i++;
+        }
+
+        MyAdapter adapter = new MyAdapter
+                (this,code,chercher.getText().toString(),countries);
+
+        list_countries.setAdapter(adapter);
+    }
+
+    public void return_to_add(View view)
+    {
+        Intent intent = new Intent(this,Gestion_countries.class);
+        startActivity(intent);
+    }
+}
+***********************************************************************************************
+
+*****************************************MyAdapter*******************************************
+
+package ma.suptech.preparationexamen.ihm;
+
+import android.content.Context;
+import android.support.annotation.NonNull;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.TextView;
+
+import java.util.List;
+
+import ma.suptech.preparationexamen.R;
+import ma.suptech.preparationexamen.dao.Countries;
+import ma.suptech.preparationexamen.metier.CountriesMetier;
+
+/**
+ * Created by Chebihi_PC on 08/05/2017.
+ */
+
+public class MyAdapter extends ArrayAdapter
+{
+    String chercher;
+    CountriesMetier metier;
+    List<Countries> countries;
+    Context context;
+
+    public MyAdapter(List_Countries context, String[] codes, String chercher, List<Countries> countries)
+    {
+        super(context, R.layout.row_layout, R.id.code_lbl,codes);
+        this.context = context;
+        metier = new CountriesMetier(context);
+        this.chercher = chercher;
+        this.countries = countries;
+    }
+
+    @NonNull
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent)
+    {
+        View row = convertView ;
+        if(row == null)
+        {
+            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            row = inflater.inflate(R.layout.row_layout,parent,false);
+        }
+
+        TextView code = (TextView) row.findViewById(R.id.code_lbl);
+        TextView name = (TextView) row.findViewById(R.id.name_lbl);
+        TextView continent = (TextView) row.findViewById(R.id.continent_lbl);
+        TextView region = (TextView) row.findViewById(R.id.region_lbl);
+
+        code.setText(countries.get(position).getCode());
+        name.setText(countries.get(position).getName());
+        continent.setText(countries.get(position).getContinent());
+        region.setText(countries.get(position).getRegion());
+
+        return  row;
+    }
+}
+
+*********************************************************************************************
+*					PACKAGE DAO				            *
+*********************************************************************************************
+
+****************************************Countries********************************************
+
+package ma.suptech.preparationexamen.dao;
+
+/**
+ * Created by Chebihi_PC on 08/05/2017.
+ */
+
+public class Countries
+{
+    private String code;
+    private String name;
+    private String continent;
+    private String region;
+
+    public Countries(String code, String name, String continent, String region) {
+        this.code = code;
+        this.name = name;
+        this.continent = continent;
+        this.region = region;
+    }
+
+    public Countries() {
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getContinent() {
+        return continent;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+    public void setContinent(String continent) {
+        this.continent = continent;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+
+*******************************************************************************************
+
+**************************************CountriesDao*****************************************
+
+package ma.suptech.preparationexamen.dao;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import ma.suptech.preparationexamen.MySQLite;
+
+/**
+ * Created by Chebihi_PC on 08/05/2017.
+ */
+
+public class CountriesDao
+{
+    MySQLite mySQLite;
+    SQLiteDatabase db ;
+
+    public CountriesDao(Context context)
+    {
+        mySQLite =new MySQLite(context);
+        db = mySQLite.getWritableDatabase();
+    }
+
+    public void add_countries(Countries countries) throws SQLException
+    {
+        ContentValues values = new ContentValues();
+        values.put(MySQLite.getCODE(),countries.getCode());
+        values.put(MySQLite.getNAME(),countries.getName());
+        values.put(MySQLite.getCONTINENT(),countries.getContinent());
+        values.put(MySQLite.getREGION(),countries.getRegion());
+
+        if(db.insert(MySQLite.getTableCountries(),null,values)==-1)
+        {
+            throw new SQLException("you can't insert this countrie");
+        }
+    }
+
+    public List<Countries> get_countries() throws SQLException
+    {
+        List<Countries> countries = new ArrayList<Countries>();
+
+        Cursor c = db.query(MySQLite.getTableCountries(),new String[]{MySQLite.getCODE(),
+        MySQLite.getNAME(),MySQLite.getCONTINENT(),MySQLite.getREGION()},
+                null,null,null,null,null);
+
+        while (c.moveToNext())
+        {
+            Countries countrie = new Countries();
+            countrie.setCode(c.getString(0));
+            countrie.setName(c.getString(1));
+            countrie.setContinent(c.getString(2));
+            countrie.setRegion(c.getString(3));
+
+            countries.add(countrie);
+        }
+
+        return countries;
+    }
+
+
+}
+
+*************************************************************************************************
+*				  METIER							*
+*************************************************************************************************
+
+**********************************MySQLite*******************************************************
+
+package ma.suptech.preparationexamen;
+
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
+/**
+ * Created by Chebihi_PC on 08/05/2017.
+ */
+
+public class MySQLite extends SQLiteOpenHelper
+{
+    private static final String DB_NAME = "TP_SQLite_ListView";
+    private static final int DB_VERSION = 1 ;
+
+    private static final String TABLE_COUNTRIES = "countries";
+    private static final String CODE = "code";
+    private static final String NAME = "name";
+    private static final String CONTINENT = "continent";
+    private static final String REGION = "region";
+    private static final String REQ_COUNTRIES = "create table "+TABLE_COUNTRIES+
+            "( "+CODE+" varchar(50) primary key, "+NAME+" varchar(100),"+
+            CONTINENT+" varchar(100), "+REGION+" varchar(100))";
+
+    public MySQLite(Context context)
+    {
+        super(context, DB_NAME, null, DB_VERSION);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db)
+    {
+        db.execSQL(REQ_COUNTRIES);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
+    {
+        db.execSQL("drop table "+TABLE_COUNTRIES);
+        onCreate(db);
+    }
+
+    public static String getDbName() {
+        return DB_NAME;
+    }
+
+    public static int getDbVersion() {
+        return DB_VERSION;
+    }
+
+    public static String getTableCountries() {
+        return TABLE_COUNTRIES;
+    }
+
+    public static String getCODE() {
+        return CODE;
+    }
+
+    public static String getNAME() {
+        return NAME;
+    }
+
+    public static String getCONTINENT() {
+        return CONTINENT;
+    }
+
+    public static String getREGION() {
+        return REGION;
+    }
+
+    public static String getReqCountries() {
+        return REQ_COUNTRIES;
+    }
+}
+
+***************************activity_gestion_countries********************************************
+
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_gestion_countries"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="ma.suptech.preparationexamen.ihm.Gestion_countries">
+
+    <EditText
+        android:paddingLeft="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="CODE"
+        android:layout_margin="10dp"
+        android:id="@+id/code_txt"
+        />
+
+    <EditText
+        android:paddingLeft="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="NAME"
+        android:id="@+id/name_txt"
+        android:layout_below="@+id/code_txt"
+        android:layout_alignLeft="@+id/code_txt"
+        />
+
+    <EditText
+        android:paddingLeft="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="CONTINET"
+        android:id="@+id/continent_txt"
+        android:layout_below="@+id/name_txt"
+        android:layout_alignLeft="@+id/code_txt"
+        />
+
+    <EditText
+        android:paddingLeft="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="REGION"
+        android:id="@+id/region_txt"
+        android:layout_below="@+id/continent_txt"
+        android:layout_alignLeft="@+id/code_txt"
+        />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ADD"
+        android:layout_below="@+id/region_txt"
+        android:layout_marginTop="10dp"
+        android:onClick="add_countries"
+        android:id="@+id/btn_add"
+        />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="List"
+        android:layout_below="@+id/btn_add"
+        android:layout_marginTop="10dp"
+        android:onClick="go_to_list"
+        />
+
+
+
+</RelativeLayout>
+
+
+*******************************activity_list_countries*******************************************
+
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_list__countries"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="ma.suptech.preparationexamen.ihm.List_Countries">
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Return"
+        android:layout_marginTop="10dp"
+        android:onClick="return_to_add"
+        android:id="@+id/btn_return"
+        />
+
+    <EditText
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/btn_return"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Type here to filter ... "
+        android:id="@+id/chercher_txt"
+        />
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/list_countries"
+        android:layout_below="@+id/chercher_txt"
+        android:layout_marginTop="10dp"
+        />
+
+
+
+</RelativeLayout>
+
+*************************************row_layout***************************************************
+
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+
+
+    <TextView
+        android:paddingLeft="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="CODE"
+        android:layout_margin="10dp"
+        android:id="@+id/code_lbl"
+        />
+
+    <TextView
+        android:paddingLeft="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="NAME"
+        android:id="@+id/name_lbl"
+        android:layout_below="@+id/code_lbl"
+        android:layout_alignLeft="@+id/code_lbl"
+        />
+
+    <TextView
+        android:paddingLeft="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="CONTINENT"
+        android:id="@+id/continent_lbl"
+        android:layout_below="@+id/name_lbl"
+        android:layout_alignLeft="@+id/code_lbl"
+        />
+
+    <TextView
+        android:paddingLeft="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="REGION"
+        android:id="@+id/region_lbl"
+        android:layout_below="@+id/continent_lbl"
+        android:layout_alignLeft="@+id/code_lbl"
+        />
+
+
+
+</RelativeLayout>
+
+
+
+
+
+
+
+
+
+
+
+
